@@ -1,0 +1,39 @@
+body {
+    background-color: #00A6D6;
+    margin: 0;
+    padding: 0;
+}
+
+#maingame {
+    /*background-color: #0066a2;*/
+    margin-left: 50px;
+    margin-top: 70px;
+
+    width: 70vw;
+    height: 80vh;
+}
+
+#circletable {
+    padding: 50px;
+    display: flex;
+}
+ul {
+    display: inline;
+    margin: 0;
+}
+
+li {
+    margin: 20px;
+    display: inline;
+}
+#row {
+
+}
+
+.circle {
+    height: 40px;
+    width: 40px;
+    background-color: #0066a2;
+    border-radius: 50%;
+    display: block;
+}
