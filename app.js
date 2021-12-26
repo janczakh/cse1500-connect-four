@@ -6,7 +6,8 @@ const ws = require("ws")
 const port = process.argv[2];
 const app = express();
 const server = http.createServer(app).listen(port);
-const publicRoot = __dirname + "/public"
+const publicRoot = __dirname + "/public/game/"
+const publicSplashRoot = __dirname + "/public/splash/"
 
 app.use(express.static(publicRoot));  //If user requests /public send the file
 
@@ -17,7 +18,7 @@ app.get("/", function(res, req) {
 
 //Serve the game under /game
 app.get("/game", function(res, req) {
-    req.sendFile(publicRoot + "/game.html")
+    req.sendFile(publicRoot + "index.html")
 })
 
 //Websocket seup
