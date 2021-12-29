@@ -1,16 +1,27 @@
+
 //Main setup of the clientside
 (function setup() {
     const socket = new WebSocket(Setup.URL) //Socket connection to the server
-    socket.onopen = function () {
-         socket.send("user_confirm")
-    }
     socket.onmessage = function (ms) {
-        if(ms.data == "connection_confirm") {
-            console.log("Server connection established")
-        }
+        
     }
+    const gameInfo = new GameInfo(socket)
+    let s = {
+        dupa: 5
+    }
+    socket.send("cf")
+    console.log("sent")
 })();
 
+function GameInfo(socket) {
+    this.playerType = null
+    this.socket = socket
+    this.circles = document.querySelectorAll(".circle")
+}
+
+//TODO: Changing player flame
+
+//Clock method
 function timeKeeper() {
     var beginTime = new Date();
     
