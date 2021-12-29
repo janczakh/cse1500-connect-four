@@ -37,11 +37,11 @@ const websockets = {} //Array of current websockets
 //Handling client-server connection
 wsServer.on("connection", function(webs) {
     //Socket assignment on connection
-    ws["id"] = socketID++; //Assign unique socket ID
-    websockets[ws["id"]] = currentGame //Assign the socket to currently played game
+    webs["id"] = socketID++; //Assign unique socket ID
+    websockets[webs["id"]] = currentGame //Assign the socket to currently played game
     const playerPosition = currentGame.addPlayer(webs) //Set player position to green or orange
 
-    console.log(`Player ${ws["id"]} got to play in game ${currentGame.id} as player ${playerPosition}`)
+    console.log(`Player ${webs["id"]} got to play in game ${currentGame.id} as player ${playerPosition}`)
     
     //If current game has two players, create a new game
     if (currentGame.readyToGo() == 1) {
@@ -51,13 +51,15 @@ wsServer.on("connection", function(webs) {
     //Handling client requests
     webs.on("message", function(message) {
         message = JSON.parse(message)
-        const gm = websockets[ws["id"]]  //Game of the client
+        const gm = websockets[webs["id"]]  //Game of the client
         const players = gm.getPlayers()  //Players of the game
         const playerNum = gm.getPlayerNum(webs)  //Is current player green or orange? (0 - orange, 1 - green)
 
         console.log(message.type)
         //Handling user wanting to put down a circle
         if (message.type == "P_PUT_CIRCLE") {
+            console.log("br1")
+            console.log(gm.whosTurn(), playerNum, gm.getPlayers())
             if (gm.whosTurn() == playerNum) {  //Is it the player's turn?
                 gm.put(message.data)           //If so, insert correct color at the correct place
                 msg = messages.S_UPDATE_BOARD  //Send update message to both players
