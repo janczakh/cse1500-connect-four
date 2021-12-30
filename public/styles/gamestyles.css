@@ -4,6 +4,9 @@ body {
     padding: 0;
     overflow: hidden;
 }
+#toosmall {
+    display: none;
+}
 
 #maingame {
     /**Set up the container's position**/
@@ -36,15 +39,26 @@ body {
     border-radius: 50%;
     margin: 20px;
     margin-left: 40px;
-    display: inline;
-
     display: block;
+    caret-color: transparent;
 }
+
+a::before {
+    content: "•"
+}
+a {
+    text-decoration: none;
+    color: #00A6D6
+}
+a:hover {
+    color: pink
+}
+
 #clock {
     /*Font css*/
     font-family: 'Oswald', sans-serif;
     color: #fff;
-    font-size: 70px;
+    font-size: 40px;
     text-align: center;
 
     margin-left: 6vw;
@@ -90,6 +104,19 @@ body {
     opacity: 0.3;
 }
 
-.circle:hover {
+/* .circle:hover {
     background-color: aquamarine;
+} */
+@media (max-width: 1400px) or (max-height: 650px) { 
+    body {
+        background-color: pink;
+    }
+    #game {
+        display: none;
+    }
+    #toosmall {
+        display: block;
+        font-size: 50px;
+        text-align: center;
+    }
 }

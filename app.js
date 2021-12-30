@@ -41,11 +41,20 @@ wsServer.on("connection", function(webs) {
     websockets[webs["id"]] = currentGame //Assign the socket to currently played game
     const playerPosition = currentGame.addPlayer(webs) //Set player position to green or orange
 
+    //Send player position data to the client
+    msg = messages.S_INFORM_PLAYER_NUM
+    msg.data = playerPosition
+    webs.send(JSON.stringify(msg))
+
     console.log(`Player ${webs["id"]} got to play in game ${currentGame.id} as player ${playerPosition}`)
     
     //If current game has two players, create a new game
     if (currentGame.readyToGo() == 1) {
-        currentGame = new Game(stats.gamesStarted++)
+        msg = messages.S_BEGIN_GAME  //Send begin message to both players
+        const players = currentGame.getPlayers()
+        players[0].send(JSON.stringify(msg))
+        players[1].send(JSON.stringify(msg))
+        currentGame = new Game(stats.gamesStarted++)  //Create new game
     }
 
     //Handling client requests
@@ -55,20 +64,48 @@ wsServer.on("connection", function(webs) {
         const players = gm.getPlayers()  //Players of the game
         const playerNum = gm.getPlayerNum(webs)  //Is current player green or orange? (0 - orange, 1 - green)
 
-        console.log(message.type)
         //Handling user wanting to put down a circle
         if (message.type == "P_PUT_CIRCLE") {
-            console.log("br1")
-            console.log(gm.whosTurn(), playerNum, gm.getPlayers())
-            if (gm.whosTurn() == playerNum) {  //Is it the player's turn?
+            if (gm.whosTurn() == playerNum && gm.validateColumn(message.data)) {  //Is it the player's turn? Is the column valid? (has empty)
                 gm.put(message.data)           //If so, insert correct color at the correct place
                 msg = messages.S_UPDATE_BOARD  //Send update message to both players
                 msg.newBoard = gm.getBoard()   //New board data to be updated
-                console.log(msg.type)
-                if (players[0] != null) players[0].send(JSON.stringify(msg)) //Player != null redundant after game starts correctly
-                if (players[1] != null )players[1].send(JSON.stringify(msg))
+                players[0].send(JSON.stringify(msg)) 
+                players[1].send(JSON.stringify(msg))
+                stats.piecesPlaced++            //Up the pieces counter
+
+                check = gm.checkForWins()       //Check if the player won
+                if (check) {                    //If won
+                    const winmsg = messages.S_YOU_WON  //Send win msg to current player
+                    players[playerNum].send(JSON.stringify(winmsg))
+                    const losemsg  = messages.S_YOU_LOST
+                    players[(playerNum + 1) % 2].send(JSON.stringify(losemsg))  //Send lose msg to the other fella
+                    console.log(`Player ${playerNum} wins`)
+                    gm.finished = true
+                    stats.gamesCompleted++
+                }
                 gm.switchPlayer()               //Change current player's turn to the other player
             }
         }
+    })
+
+    webs.on("close", function() {
+        const gm = websockets[webs["id"]]  //Game of the client
+        const players = gm.getPlayers()  //Players of the game
+        const playerNum = gm.getPlayerNum(webs)  //Is current player green or orange? (0 - orange, 1 - green)
+        if (gm.finished == true) return
+        stats.gamesAborted++
+        otherPlayer = players[(playerNum + 1) % 2]
+        console.log(otherPlayer)
+        if (otherPlayer != null) {
+            msg = messages.S_GAME_ABORTED
+            otherPlayer.send(JSON.stringify(msg))
+        }
+        if (gm == currentGame) {
+            currentGame = new Game(stats.gamesStarted++)
+        }
+        // else {
+        //     gm = new Game(stats.gamesStarted++)
+        // }
     })
 })

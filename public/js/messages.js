@@ -10,6 +10,22 @@
         data: null
     }
 
+    exports.S_BEGIN_GAME = {
+        type: "S_BEGIN_GAME"
+    }
+
+    exports.S_YOU_WON = {
+        type: "S_YOU_WON"
+    }
+
+    exports.S_YOU_LOST = {
+        type: "S_YOU_LOST"
+    }
+
+    exports.S_GAME_ABORTED = {
+        type: "S_GAME_ABORTED"
+    }
+
     exports.P_PUT_CIRCLE = {   //Message from player to insert a circle
         type: "P_PUT_CIRCLE",
         data: null

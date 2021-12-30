@@ -13,64 +13,69 @@
 </head>
 <!--Connect four is 7 across 6 down-->
 <body>
-    <div id="maingame">
-        <div id="circletable">
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
-            <div class="circle"></div>
+    <!-- <div id = "toosmall">Your screen size is too small. The game will not work properly.</div> -->
+    <div id="toosmall">The screen is too small to play the game. Unfortunately, our budget cuts and ADS exams made it
+        impossible for us to make the game responsive.
     </div>
-    </div>
-    <div id="clock">00:00</div>
+    <div id="game">
+        <div id="maingame">
+            <div id="circletable">
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+        </div>
+        <div id="clock">WAITING FOR OPPONENT</div>
 
-    <div id="opponentturn" class = "turn">
-        <img src = "/images/tulogo.png">
-        <p class="turninfo">Opponent's turn</p>
-    </div>
+        <div id="opponentturn" class = "turn">
+            <img src = "/images/tulogo.png">
+            <p class="turninfo">Opponent's turn</p>
+        </div>
 
-    <div id="yourturn" class = "turn">
-        <img src = "/images/tulogo.png">
-        <p class="turninfo">Your turn</p>
+        <div id="yourturn" class = "turn">
+            <img src = "/images/tulogo.png">
+            <p class="turninfo">Your turn</p>
+        </div>
     </div>
-
     
     <script src = "js/config.js"></script>
     <script src = "js/main.js"></script>
