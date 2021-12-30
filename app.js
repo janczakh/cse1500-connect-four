@@ -6,7 +6,9 @@ const stats = require("./stats.js")  //Import the stat tracker
 const Game = require("./game.js");  //Import the game object
 const messages = require("./public/js/messages.js")  //Import the messages for client-server JSON communication
 
-//const port = process.argv[2];
+//const port = process.argv[2]; 
+//const express = require('express');const app = express();const port = 3000;
+//app.get('/', (req, res) => {        res.send('Hello World');});app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 const app = express();
 const server = http.createServer(app);
 server.listen(8080, '0.0.0.0');
@@ -82,6 +84,14 @@ wsServer.on("connection", function(webs) {
                     const losemsg  = messages.S_YOU_LOST
                     players[(playerNum + 1) % 2].send(JSON.stringify(losemsg))  //Send lose msg to the other fella
                     console.log(`Player ${playerNum} wins`)
+                    gm.finished = true
+                    stats.gamesCompleted++
+                }
+                check = gm.checkForDraw() 
+                if (check) {
+                    const drawmsg = messages.S_DRAW
+                    players[0].send(JSON.stringify(drawmsg))
+                    players[1].send(JSON.stringify(drawmsg))
                     gm.finished = true
                     stats.gamesCompleted++
                 }

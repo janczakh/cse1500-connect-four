@@ -42,6 +42,10 @@ body {
     display: block;
     caret-color: transparent;
 }
+.circle img {
+    display:block;
+    margin:auto;
+}
 
 a::before {
     content: "•"

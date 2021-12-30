@@ -1,11 +1,1 @@
-NECESSITIES
-Input validation on column-basis
-Aborting games
-Game win check
-Game win information
-StatTrack wire-up
 
-Nicies
-Column light on hover & show landing spot
-Add images on circles
-Flames switching

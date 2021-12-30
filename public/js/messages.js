@@ -22,6 +22,10 @@
         type: "S_YOU_LOST"
     }
 
+    exports.S_DRAW = {
+        type: "S_DRAW"
+    }
+
     exports.S_GAME_ABORTED = {
         type: "S_GAME_ABORTED"
     }

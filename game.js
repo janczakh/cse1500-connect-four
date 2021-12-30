@@ -41,6 +41,13 @@ game.prototype.put = function(c) {
     }
 }
 
+game.prototype.checkForDraw = function() {
+    for (pos = 0; pos < 42; pos++) {
+        if (this.board[pos] == -1) return false;
+    }
+    return true
+}
+
 game.prototype.checkForWins = function() {
     for (pos = 0; pos < 42; pos++) {
         //console.log(pos + "position")

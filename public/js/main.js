@@ -39,6 +39,11 @@
             gameInfo.lose()
         }
 
+        if (ms.type == "S_DRAW") {
+            console.log("RECEIVED DRAW INFO")
+            gameInfo.draw()
+        }
+
         if (ms.type == "S_GAME_ABORTED") {
             console.log("RECEIVED ABORT INFO")
             gameInfo.abort()
@@ -66,9 +71,11 @@ GameInfo.prototype.refreshBoard = function(newBoard) {
     for (i = 0; i < 42; i++) {
         if (newBoard[i] == 0) {
             this.circles[i].style.backgroundColor = "orange"
+            this.circles[i].innerHTML = '<img src="images/church.png">'
         }
         if  (newBoard[i] == 1) {
             this.circles[i].style.backgroundColor = "green"
+            this.circles[i].innerHTML = '<img style = "width: 70%; margin-top: 6px" src="images/windmill1.png">'
         }
     }
     this.turn = (this.turn + 1) % 2
@@ -154,6 +161,12 @@ GameInfo.prototype.lose = function() {
     this.clock.setLoseData()
 }
 
+GameInfo.prototype.draw = function() {
+    this.finish()
+    this.clock.setDrawData()
+}
+
+
 GameInfo.prototype.finish = function() {
     this.finished = true
     this.yourTurn.style.opacity = 0
@@ -191,6 +204,11 @@ Clock.prototype.setAbortData = function() {
 
 Clock.prototype.setLoseData = function() {
     this.dom.innerHTML = `<h3>You Lost!</h3><h6>I strongly recommend acquiring revenge.<h6>
+    <a href = "/game"> Play again<br>
+    <a href = "/"> Leave</a>`
+}
+Clock.prototype.setDrawData = function() {
+    this.dom.innerHTML = `<h3>It's a draw!</h3><h6>Giving up now is not a choice.<h6>
     <a href = "/game"> Play again<br>
     <a href = "/"> Leave</a>`
 }
