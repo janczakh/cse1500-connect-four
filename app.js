@@ -6,9 +6,10 @@ const stats = require("./stats.js")  //Import the stat tracker
 const Game = require("./game.js");  //Import the game object
 const messages = require("./public/js/messages.js")  //Import the messages for client-server JSON communication
 
-const port = process.argv[2];
+//const port = process.argv[2];
 const app = express();
-const server = http.createServer(app).listen(port);
+const server = http.createServer(app);
+server.listen(8080, '0.0.0.0');
 const publicRoot = __dirname + "/public/"  //Game path
 const publicSplashRoot = __dirname + "/public/"
 
