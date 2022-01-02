@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+	<meta charset="UTF-8"> 
+<head>
+	<link rel="stylesheet" href="styles/splash.css" />
+<title>Connect Four</title>
+</head>
+<body>
+	<h1>Connect Four</h1>
+	<form action="/game" method="get">
+	<button id="Start" onclick="time()" ><b>Start</b></button>
+	</form>
+	<p id="Loading" class="Loading">Loading</p>
+
+<div class="grid-container">
+	
+	<div class="item4">
+		<p class="Before">It has been</p>
+		<p class="stats" id="server_crash">
+            <%= Math.floor((new Date() - uptime)/1000/60/60) %>
+        </p>
+        <p class="After">
+            <%if (Math.floor((new Date() - uptime)/1000/60/60) != 1) { %>
+                hours
+            <% } else { %>
+                hour
+            <% } %>
+            since the last server crash! 
+        </p>
+	</div>
+	<div class="item5">
+		<p class="Before">So far</p>
+		<p class="stats" id="pieces"><%= piecesPlaced %></p>
+		<p class="After">
+            <%if (piecesPlaced != 1) { %>
+                pieces
+            <% } else { %>
+                piece
+            <% } %>
+            pieces have been placed
+        </p>
+	</div>
+	<div class="item6">
+		<p class="Before">In</p>
+		<p class="stats" id="games"><%= gamesStarted %></p>
+		<p class="After">
+            <%if (gamesStarted != 1) { %>
+                games!
+            <% } else { %>
+                game!
+            <% } %>
+        </p>
+	</div>
+</div>
+	</div>
+    <div id="toosmall">The screen is too small to play the game. Unfortunately, our budget cuts and ADS exams made it
+        impossible for us to make the game responsive.
+        </div>
+</div>
+</body>
+<script src="js/splash.js"></script>
+</html>

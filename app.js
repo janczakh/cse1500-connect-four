@@ -13,14 +13,21 @@ const app = express();
 const server = http.createServer(app);
 server.listen(8080, '0.0.0.0');
 const publicRoot = __dirname + "/public/"  //Game path
-const publicSplashRoot = __dirname + "/public/"
+// const publicSplashRoot = __dirname + "/public/"
 
 app.use(express.static(publicRoot));  //If user requests /public send the file
 
-//In the beginning serve /public/splash.html
-app.get("/", function(res, req) {
-    req.sendFile(publicRoot + "game.html")
+var timeElapsed = new Date() - stats.since;
+
+app.set('view engine', 'ejs')
+app.get('/', function(req, res) {
+    res.render('splash.ejs', { piecesPlaced: stats.piecesPlaced, gamesStarted: stats.gamesStarted, uptime: stats.since});
 })
+
+//In the beginning serve /public/splash.html
+// app.get("/", function(res, req) {
+//     req.sendFile(publicRoot + "splash.html")
+// })
 
 //Serve the game under /game
 app.get("/game", function(res, req) {
@@ -34,7 +41,7 @@ app.get("/images", function(res, req) {
 //Websocket setup
 const wsServer = new ws.Server({server})
 let socketID = 0 //Id of current websocket
-let currentGame = new Game(stats.gamesStarted++) //Create a game with id 0 and up he counter
+let currentGame = new Game(stats.gamesInitialized) //Create a game with id 0 and up he counter
 const websockets = {} //Array of current websockets
 
 //Handling client-server connection
@@ -57,7 +64,8 @@ wsServer.on("connection", function(webs) {
         const players = currentGame.getPlayers()
         players[0].send(JSON.stringify(msg))
         players[1].send(JSON.stringify(msg))
-        currentGame = new Game(stats.gamesStarted++)  //Create new game
+        currentGame = new Game(stats.gamesInitialized++)  //Create new game
+        stats.gamesStarted++
     }
 
     //Handling client requests
@@ -107,13 +115,12 @@ wsServer.on("connection", function(webs) {
         if (gm.finished == true) return
         stats.gamesAborted++
         otherPlayer = players[(playerNum + 1) % 2]
-        console.log(otherPlayer)
         if (otherPlayer != null) {
             msg = messages.S_GAME_ABORTED
             otherPlayer.send(JSON.stringify(msg))
         }
         if (gm == currentGame) {
-            currentGame = new Game(stats.gamesStarted++)
+            currentGame = new Game(stats.gamesInitialized++)
         }
         // else {
         //     gm = new Game(stats.gamesStarted++)

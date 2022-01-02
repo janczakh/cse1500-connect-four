@@ -9,6 +9,7 @@
   "author": "Naautiik and Tezzish",
   "license": "ISC",
   "dependencies": {
+    "ejs": "^3.1.6",
     "expres": "0.0.5",
     "express": "^4.17.2",
     "socket.io": "^4.4.0",
