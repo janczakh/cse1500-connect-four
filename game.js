@@ -1,3 +1,7 @@
+//Game object is initialized for each game being played
+//Game object handles all the interaction with the board via the server
+//Performs move validation, finish validation and keeps track of the board state
+
 const ws = require("ws")
 
 //Main game object
@@ -8,10 +12,11 @@ const game = function(ID) {
     this.finished = false
     this.turn = 0   //0 - oranges turn, 1 - greens turn
     this.board = null
-    this.createBoard()  //Populates this.board with -1's; then, 0 will be orange circles and 1's will be green circles
+    this.createBoard()
 }
 
 //Populate the board
+//-1 - nothing placed, 0 - orange placed, 1 - green placed
 game.prototype.createBoard = function() {
     this.board = []
     for (i = 0; i < 42; i++) {
@@ -19,52 +24,58 @@ game.prototype.createBoard = function() {
     }
 }
 
-//Returns board
 game.prototype.getBoard  = function() {
     return this.board
 }
 
-//Returns players
 game.prototype.getPlayers = function() {
     return [this.orangePlayer, this.greenPlayer]
 }
 
 //Updates the board after player successfully clicks something that can be clicked
+//Param: column number c
+//The methods crashes if the column is not properly validated beforehand
+//Finds the first row which has an empty spot at that column by repeatedly going upwards from the bottom
 game.prototype.put = function(c) {
-    c = c % 7 + 35 //Move to the last row of the column containing the given index; c % 7 finds the column, +35 moves to the last row
+    c = c % 7 + 35 //Last row of the column
     while (true) {
         if  (this.board[c] == -1) { //If found empty spot, insert
-            this.board[c] = this.whosTurn()  //Insert the number correspoding to current player's turn
+            this.board[c] = this.whosTurn() //Player's turn number is the same as player's color id on the board
             return
         }
-        c -= 7   //If didn't find empty spot, go up (since the column was validated by app.js, we must break at some point)
+        c -= 7   //If didn't find empty spot, go up
     }
 }
 
+//Checks for draws by checking if every single position on the top row was filled by some player
+
 game.prototype.checkForDraw = function() {
-    for (pos = 0; pos < 42; pos++) {
+    for (pos = 0; pos < 7; pos++) {
         if (this.board[pos] == -1) return false;
     }
     return true
 }
 
+//Tests if there are 4 places available and if all of them are filled with same color
 game.prototype.checkForWins = function() {
     for (pos = 0; pos < 42; pos++) {
-        //console.log(pos + "position")
-        //Horizontal test
-        if (pos % 7 < 4 && pos+3 < 42) {
-            if(this.checkEquals(pos, 1)) {
+
+        //Checks for horizontal win
+        //Validates if there are 4 empty spaces 
+        if (pos % 7 < 4) {
+            if(this.checkEquals(pos, 1)) { //checkEquals() tests if 4 colors in a row spaced by a given interval are same
                 return true
             }
         }
-        if (pos + 21 < 42) {  //Everything vertical must be at least at height 4, so 21 circles underneath
+        //All other test is vertical and must be at least at height 4, so 21 circles underneath
+        if (pos + 21 < 42) {  
             //Vertical test
-            if(this.checkEquals(pos, 7)) {  //We check 4 circles, each 7 apart (so right under)
+            if(this.checkEquals(pos, 7)) {  // 4 circles, each 7 apart (so right under)
                 return true
             }
             //Diagonal-right test
-            if (pos % 7 < 4) {  //For diagonal-right, we must be at least 4 away from the right wall
-                if(this.checkEquals(pos, 8)) { //Every 8, 7 for next row and 1 for diagonalization
+            if (pos % 7 < 4) {  //at least 4 away from the right wall
+                if(this.checkEquals(pos, 8)) { //7 for next row + 1 for diagonalization
                     return true
                 }
             }
@@ -79,18 +90,18 @@ game.prototype.checkForWins = function() {
     return false
 }
 
+//Checks if there are 4 colors placed in the same direction
 game.prototype.checkEquals = function(pos, diff)  {
-    //if (pos == 38) console.log(pos, this[pos] == this[pos+1], this[pos] == this)
     return (this.board[pos] != -1 && this.board[pos] == this.board[pos+diff] 
         && this.board[pos+2*diff] == this.board[pos+3*diff]
         && this.board[pos+diff*2] == this.board[pos+diff])
 }
 
-//Checks if a clicked column has at least one empty space by going forwards from the first row (0-6) to the last
-//Each time incrementing the idx by 7 effectively moving one row down without changing column\
-//Returns true if found empty spot, false otherwise
+//Checks if a clicked column has at least one empty space
+//Returns true iff found empty spot
+//Params: idx index that was clicked
 game.prototype.validateColumn = function(idx) {
-    idx %= 7 //Find the topmost column position
+    idx %= 7 //Find the topmost column position from the top
     while (idx < 42) { 
         if (this.board[idx] == -1) return true  //Found empty spot, return true
         idx += 7  //Otherwise go to next row
@@ -100,13 +111,14 @@ game.prototype.validateColumn = function(idx) {
 }
 
 
-//Adds player, returns 0 if added player is orange, 1 if green and -1 if error (both players locked)
+//Adds player
+//returns 0 if added player is orange, 1 green and -1 if error (both players locked)
 game.prototype.addPlayer = function(p) {
     if (this.orangePlayer == null) {
         this.orangePlayer = p
         return 0
     }
-    else if (this.greenPlayer == null) {
+    if (this.greenPlayer == null) {
         this.greenPlayer = p
         return 1
     }
@@ -120,13 +132,12 @@ game.prototype.getPlayerNum = function(webs) {
     return -1
 }
 
-//Changes current player turn to the other guy
+//Changes current player turn to the other guy (or guyette)
 game.prototype.switchPlayer = function() {
-    if (this.turn == 0) this.turn = 1
-    else this.turn = 0
+    this.turn = (this.turn + 1) % 2;
 }
 
-//Returns 1 if both players ready, otherwise 0
+//Returns 1 iff both players ready
 game.prototype.readyToGo = function()  {
     if (this.orangePlayer != null && this.greenPlayer != null) {
         return 1

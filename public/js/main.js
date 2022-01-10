@@ -1,12 +1,17 @@
 //Main setup of the clientside
+//Holds the animations and communcation with the server
+
 (function setup() {
     const socket = new WebSocket(Setup.URL) //Socket connection to the server
 
     const gameInfo = new GameInfo(socket) //Create gameInfo object for the client
+
     //Handling inputs from the server
-    socket.onmessage = function (ms) {
-        
+    socket.onmessage = function (ms) {  
         ms = JSON.parse(ms.data)
+        
+        //Given player's color
+        //Updates the turn sprites
         if (ms.type == "S_INFORM_PLAYER_NUM") {
             gameInfo.turn = ms.data
             gameInfo.switchTurn(gameInfo.turn)
@@ -20,39 +25,29 @@
             }
         }
         
+        //If start game, adds event listeners to circles and starts keeping track of time
         if (ms.type == "S_BEGIN_GAME") {
             initializeCircles(gameInfo)
             gameInfo.clock.beginTimeKeeping()
         }
 
-        if (ms.type == "S_UPDATE_BOARD") {  //Refreshes the board
+        if (ms.type == "S_UPDATE_BOARD") {  //Refreshes the board with server data
             gameInfo.refreshBoard(ms.newBoard)
         }
 
         if (ms.type == "S_YOU_WON") {
-            console.log("RECEIVED WIN INFO")
             gameInfo.win()
         }
-
         if (ms.type == "S_YOU_LOST") {
-            console.log("RECEIVED LOSE INFO")
             gameInfo.lose()
         }
-
         if (ms.type == "S_DRAW") {
-            console.log("RECEIVED DRAW INFO")
             gameInfo.draw()
         }
-
         if (ms.type == "S_GAME_ABORTED") {
-            console.log("RECEIVED ABORT INFO")
             gameInfo.abort()
         }
     }
-    //initializeCircles(gameInfo)
-    // socket.onopen = function() {
-    //     socket.send(JSON.stringify(s))
-    // }
 })();
 
 //Game info object, stores client's data about the game
@@ -66,7 +61,7 @@ function GameInfo(socket) {
     this.finished = false
 }
 
-//Refreshes the board with new data (-1 is nothing, 0 is orange, 1 green)
+//Refreshes the board with new circle (-1 is nothing, 0 is orange, 1 green) and switches turn
 GameInfo.prototype.refreshBoard = function(newBoard) {
     for (i = 0; i < 42; i++) {
         if (newBoard[i] == 0) {
@@ -82,6 +77,7 @@ GameInfo.prototype.refreshBoard = function(newBoard) {
     this.switchTurn(this.turn)
 }
 
+//Changes the flairs to represent current turn
 GameInfo.prototype.switchTurn = function(turn) {
     if (this.finished) return   
     if (this.turn == 0) {
@@ -96,15 +92,14 @@ GameInfo.prototype.switchTurn = function(turn) {
 
 //Sends requests to the server
 GameInfo.prototype.sendRequest = function(req) {
-    console.log("sending request..")
     this.socket.send(JSON.stringify(req))
 }
 
 //Creates the array of circles and adds an event listener to every one of them
 function initializeCircles(gameInfo) {
     circles = document.querySelectorAll(".circle")  //Select all .circle DOM objects
-    var id = 0;     //Initialize ID, unique for each circle
-    //For each circle, assign it an ID and add an event listener
+    let id = 0;     //Initialization ID, unique for each circle
+
     circles.forEach(function(el) {  
         el.id = id
         el.addEventListener("click", function(e)  {  //If clicked, sends the P_PUT_CIRCLE request to the server with circle ID as data
@@ -112,6 +107,8 @@ function initializeCircles(gameInfo) {
             msg.data = el.id
             gameInfo.sendRequest(msg)
         })
+
+        //Highlight on hover (if empty)
         el.addEventListener("mouseenter", function(e) {
             gameInfo.highlightCol(el.id)
         })
@@ -123,8 +120,10 @@ function initializeCircles(gameInfo) {
     gameInfo.circles = circles  //Assign the circles array to gameInfo variable
 }
 
+//Highlights the circle where a user will drop if they click (the lowest empty in the column)
 GameInfo.prototype.highlightCol = function(col) {
     if (this.finished) return
+    //Find the lowest empty and change color to highlight
     col = col % 7 + 35
     while (col >= 0) {
         if (this.circles[col].style.backgroundColor != "orange" && this.circles[col].style.backgroundColor != "green") {
@@ -135,6 +134,7 @@ GameInfo.prototype.highlightCol = function(col) {
     }
 }
 
+//Reverses the highlightCol method
 GameInfo.prototype.dehighlightCol = function(col) {
     col = col % 7 + 35
     while (col >= 0) {
@@ -146,6 +146,9 @@ GameInfo.prototype.dehighlightCol = function(col) {
     }
 }
 
+//Finishing methods
+//Stop the event listeners, clocks and highlighting
+//And displays relevant finish data
 GameInfo.prototype.win = function() {
     this.finish()
     this.clock.setWinData()
@@ -166,7 +169,7 @@ GameInfo.prototype.draw = function() {
     this.clock.setDrawData()
 }
 
-
+//Stops the game for the user
 GameInfo.prototype.finish = function() {
     this.finished = true
     this.yourTurn.style.opacity = 0
@@ -177,13 +180,13 @@ GameInfo.prototype.finish = function() {
 
 
 ///CLOOOOOOOOOOCK 
-
 function Clock() {
     this.dom = document.getElementById("clock")
     this.beginTime = null
     this.interval = null
 }
 
+//Changes clock into a finish message
 Clock.prototype.setFinishData = function() {
     var dom = this.dom
     dom.style.fontSize = "40px"
@@ -213,22 +216,21 @@ Clock.prototype.setDrawData = function() {
     <a href = "/"> Leave</a>`
 }
 //Clock method for keeping time
-//Currently capable of skipping a second very rarely due to time dilation and black holes
 Clock.prototype.beginTimeKeeping = function() {
-    this.beginTime = new Date();  
+    this.beginTime = new Date(); //Time from which to count
     var clock = this.dom
     clock.textContent = "00:00"
-    clock.style.fontSize = "70px"//Time the session began
-    this.interval = setInterval(this.editTime.bind(this), 1000)
+    clock.style.fontSize = "70px"
+    this.interval = setInterval(this.editTime.bind(this), 1000) //Change every second
 
 }
 
 //Changes the time on the clock
 Clock.prototype.editTime = function() {
     var curTime = new Date();
-    var elapsedSeconds = Math.floor((curTime - this.beginTime)/1000);  //How many seconds elapsed since the beginning? (Divided by 1000 cause ms)
-    var elapsedMinutes = Math.floor(elapsedSeconds/60); //How many minutes?
-    elapsedSeconds = elapsedSeconds - elapsedMinutes*60; //How many seconds if we remove the minutes?
+    var elapsedSeconds = Math.floor((curTime - this.beginTime)/1000);  //Elapsed seconds (Divided by 1000 cause ms)
+    var elapsedMinutes = Math.floor(elapsedSeconds/60);
+    elapsedSeconds = elapsedSeconds - elapsedMinutes*60; //Seconds left after extracting minutes
     if (elapsedMinutes < 10) {  //Add a leading 0 if minutes < 10
         elapsedMinutes = "0" + elapsedMinutes;
     }
@@ -237,9 +239,3 @@ Clock.prototype.editTime = function() {
     }
     clock.textContent = elapsedMinutes + ":" + elapsedSeconds;  //Update the DOM #clock
 }
-
-// function alertSize() {
-//     console.log(window.innerHeight +" " + window.innerWidth)
-//     if (window.innerHeight < 650 || window.innerWidth < 1400) window.alert("You screen size is too small. The game might look rubbish.")
-// }
-// window.onresize = alertSize

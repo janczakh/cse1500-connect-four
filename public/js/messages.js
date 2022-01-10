@@ -1,3 +1,5 @@
+//Message objects sent between client and server
+
 (function (exports) {
 
     exports.S_UPDATE_BOARD = {  //Message from server to update the client's board
@@ -5,7 +7,7 @@
         newBoard: null
     };
 
-    exports.S_INFORM_PLAYER_NUM = {
+    exports.S_INFORM_PLAYER_NUM = { //Informs player of his color (0 - orange, 1 - green)
         type: "S_INFORM_PLAYER_NUM",
         data: null
     }
@@ -32,7 +34,7 @@
 
     exports.P_PUT_CIRCLE = {   //Message from player to insert a circle
         type: "P_PUT_CIRCLE",
-        data: null
+        data: null              //Index of circle to be put
     }
 
 })(typeof exports === "undefined" ? (this.Messages = {}) : exports)  //If exports is undefined we are on the client, otherwise server

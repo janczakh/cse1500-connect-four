@@ -1,35 +1,30 @@
+//Main server node app
+//Handles client-server-game communication
+
 
 const express = require("express");
 const http = require("http");
 const ws = require("ws")
-const stats = require("./stats.js")  //Import the stat tracker
-const Game = require("./game.js");  //Import the game object
-const messages = require("./public/js/messages.js")  //Import the messages for client-server JSON communication
+const stats = require("./stats.js")  //Game statistics package
+const Game = require("./game.js");  //Game object file
+const messages = require("./public/js/messages.js")  //Messages sent between client and server
 
-//const port = process.argv[2]; 
-//const express = require('express');const app = express();const port = 3000;
-//app.get('/', (req, res) => {        res.send('Hello World');});app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 const app = express();
 const server = http.createServer(app);
 server.listen(8080, '0.0.0.0');
-const publicRoot = __dirname + "/public/"  //Game path
-// const publicSplashRoot = __dirname + "/public/"
+const publicRoot = __dirname + "/public/"
 
-app.use(express.static(publicRoot));  //If user requests /public send the file
+app.use(express.static(publicRoot));  //make public user-accessible
 
-var timeElapsed = new Date() - stats.since;
-
+//Rendering ejs (statistics) on the splash screen
 app.set('view engine', 'ejs')
 app.get('/', function(req, res) {
-    res.render('splash.ejs', { piecesPlaced: stats.piecesPlaced, gamesStarted: stats.gamesStarted, uptime: stats.since});
+    res.render('splash.ejs', { 
+        piecesPlaced: stats.piecesPlaced, 
+        gamesStarted: stats.gamesStarted, 
+        uptime: stats.since});
 })
 
-//In the beginning serve /public/splash.html
-// app.get("/", function(res, req) {
-//     req.sendFile(publicRoot + "splash.html")
-// })
-
-//Serve the game under /game
 app.get("/game", function(res, req) {
     req.sendFile(publicRoot + "game.html")
 })
@@ -39,9 +34,11 @@ app.get("/images", function(res, req) {
 })
 
 //Websocket setup
+//Each incoming user will get a unique socketID used to distinguish their connection
+//Each game gets a unique ID based on stats.gamesInitialized
 const wsServer = new ws.Server({server})
-let socketID = 0 //Id of current websocket
-let currentGame = new Game(stats.gamesInitialized) //Create a game with id 0 and up he counter
+let socketID = 0 
+let currentGame = new Game(stats.gamesInitialized)
 const websockets = {} //Array of current websockets
 
 //Handling client-server connection
@@ -51,7 +48,7 @@ wsServer.on("connection", function(webs) {
     websockets[webs["id"]] = currentGame //Assign the socket to currently played game
     const playerPosition = currentGame.addPlayer(webs) //Set player position to green or orange
 
-    //Send player position data to the client
+    //Send player position to the client
     msg = messages.S_INFORM_PLAYER_NUM
     msg.data = playerPosition
     webs.send(JSON.stringify(msg))
@@ -75,28 +72,35 @@ wsServer.on("connection", function(webs) {
         const players = gm.getPlayers()  //Players of the game
         const playerNum = gm.getPlayerNum(webs)  //Is current player green or orange? (0 - orange, 1 - green)
 
-        //Handling user wanting to put down a circle
+        //User request to put down a circle
         if (message.type == "P_PUT_CIRCLE") {
-            if (gm.whosTurn() == playerNum && gm.validateColumn(message.data)) {  //Is it the player's turn? Is the column valid? (has empty)
-                gm.put(message.data)           //If so, insert correct color at the correct place
-                msg = messages.S_UPDATE_BOARD  //Send update message to both players
+            //Put circle only if it's the player's turn and the column is not full
+            if (gm.whosTurn() == playerNum && gm.validateColumn(message.data)) { 
+                gm.put(message.data)           //Insert correct color at the correct place
+                
+                //Inform the player's of new board state
+                msg = messages.S_UPDATE_BOARD  
                 msg.newBoard = gm.getBoard()   //New board data to be updated
                 players[0].send(JSON.stringify(msg)) 
                 players[1].send(JSON.stringify(msg))
-                stats.piecesPlaced++            //Up the pieces counter
+                stats.piecesPlaced++
 
-                check = gm.checkForWins()       //Check if the player won
-                if (check) {                    //If won
-                    const winmsg = messages.S_YOU_WON  //Send win msg to current player
+                //If the player won
+                if (gm.checkForWins()) {   
+                    //Send win msg to current player        
+                    const winmsg = messages.S_YOU_WON  
                     players[playerNum].send(JSON.stringify(winmsg))
+                    
+                    //Send lose msg to the other fella
                     const losemsg  = messages.S_YOU_LOST
-                    players[(playerNum + 1) % 2].send(JSON.stringify(losemsg))  //Send lose msg to the other fella
+                    players[(playerNum + 1) % 2].send(JSON.stringify(losemsg))
+
                     console.log(`Player ${playerNum} wins`)
                     gm.finished = true
                     stats.gamesCompleted++
                 }
-                check = gm.checkForDraw() 
-                if (check) {
+                //Check if draw
+                if (gm.checkForDraw() ) {
                     const drawmsg = messages.S_DRAW
                     players[0].send(JSON.stringify(drawmsg))
                     players[1].send(JSON.stringify(drawmsg))
@@ -108,22 +112,26 @@ wsServer.on("connection", function(webs) {
         }
     })
 
+    //Handling user disconnecting
     webs.on("close", function() {
         const gm = websockets[webs["id"]]  //Game of the client
         const players = gm.getPlayers()  //Players of the game
         const playerNum = gm.getPlayerNum(webs)  //Is current player green or orange? (0 - orange, 1 - green)
-        if (gm.finished == true) return
+
+        if (gm.finished == true) return //If game is finished, the user can leave without consequences
+
         stats.gamesAborted++
+        //Send information about aborted game to the other player
         otherPlayer = players[(playerNum + 1) % 2]
         if (otherPlayer != null) {
             msg = messages.S_GAME_ABORTED
             otherPlayer.send(JSON.stringify(msg))
         }
+        //If the player aborted the game that was currently being filled,
+        //Create a new game to avoid making  the queue stuck
         if (gm == currentGame) {
             currentGame = new Game(stats.gamesInitialized++)
         }
-        // else {
-        //     gm = new Game(stats.gamesStarted++)
-        // }
+
     })
 })
